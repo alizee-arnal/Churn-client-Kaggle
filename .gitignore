@@ -211,6 +211,18 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Kaggle data and credentials
+.kaggle/
+kaggle.json
+
+data/
+*.csv
+*.zip
+
+# local project artifacts
+.ipynb_checkpoints/
+__pycache__/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

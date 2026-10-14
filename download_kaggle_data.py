@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 DATASET_SLUG = "blastchar/telco-customer-churn"
-OUTPUT_DIR = Path("data")
+OUTPUT_DIR = Path("data") / "raw"
 
 
 def cli_available() -> bool:
@@ -48,7 +48,7 @@ def download_dataset() -> int:
         print("4. Puis relance ce script.")
         return 1
 
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     cmd = [
         "kaggle",

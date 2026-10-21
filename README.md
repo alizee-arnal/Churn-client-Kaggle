@@ -1,98 +1,98 @@
-# Prédiction du churn client (Telco)
+# Customer Churn Prediction (Telco)
 
-Analyse et modélisation du départ des clients d'un opérateur télécom, à partir du dataset Kaggle [Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) (7 043 clients, 21 variables).
+Analysis and modeling of customer churn for a telecom operator, based on the Kaggle [Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) dataset (7,043 customers, 21 variables).
 
-**Objectif :** identifier les clients susceptibles de résilier leur abonnement (churn) et comprendre les facteurs qui expliquent leur départ, afin de cibler des actions de rétention.
+**Goal:** identify customers likely to cancel their subscription (churn) and understand what drives them to leave, in order to target retention actions.
 
-## Résultats en bref
+## Key results
 
-- **26,5 %** des clients sont partis : le jeu de données est déséquilibré.
-- Le modèle retenu est la **régression logistique** : son AUC sur le test (0,839) est proche de celle de la Random Forest (0,845), et elle reste interprétable.
-- Au seuil de 0,5, elle détecte **78 % des clients qui partent** (rappel), avec une précision de 51 %.
-- Facteurs qui augmentent le risque de départ : fibre optique, paiement par chèque électronique, facturation dématérialisée, options streaming.
-- Facteurs qui le réduisent : ancienneté, contrat d'un ou deux ans, options sécurité en ligne et support technique.
+- **26.5%** of customers churned: the dataset is imbalanced.
+- The selected model is **logistic regression**: its test AUC (0.839) is close to the Random Forest's (0.845), and it remains interpretable.
+- At a 0.5 threshold, it detects **78% of the customers who leave** (recall), with 51% precision.
+- Factors that increase churn risk: fiber optic internet, electronic check payment, paperless billing, streaming options.
+- Factors that reduce it: tenure, one- or two-year contracts, online security and tech support options.
 
-### Comparaison des modèles
+### Model comparison
 
-Validation croisée stratifiée à 5 folds sur le jeu d'entraînement, puis évaluation sur le jeu de test (20 % des données).
+5-fold stratified cross-validation on the training set, then evaluation on the test set (20% of the data).
 
-| Modèle | AUC (validation croisée) | Rappel (CV) | Précision (CV) | AUC (test) |
+| Model | AUC (cross-validation) | Recall (CV) | Precision (CV) | AUC (test) |
 |---|---|---|---|---|
-| Baseline (dummy) | 0,507 | 0,278 | 0,275 | 0,516 |
-| Régression logistique | 0,845 | 0,794 | 0,521 | 0,839 |
-| Random Forest | 0,846 | 0,759 | 0,542 | 0,845 |
-| Gradient Boosting | 0,846 | 0,796 | 0,526 | 0,839 |
+| Baseline (dummy) | 0.507 | 0.278 | 0.275 | 0.516 |
+| Logistic regression | 0.845 | 0.794 | 0.521 | 0.839 |
+| Random Forest | 0.846 | 0.759 | 0.542 | 0.845 |
+| Gradient Boosting | 0.846 | 0.796 | 0.526 | 0.839 |
 
-Les trois modèles ont des performances très proches. Le plus simple est donc retenu pour pouvoir lire les coefficients.
+The three models perform very similarly, so the simplest one is kept in order to read its coefficients.
 
-### Choix du seuil de décision
+### Choosing the decision threshold
 
-Le seuil dépend du coût d'une action de rétention par rapport à celui d'un client perdu.
+The threshold depends on the cost of a retention action compared with the cost of losing a customer.
 
-| Seuil | Clients alertés | Rappel | Précision |
+| Threshold | Customers flagged | Recall | Precision |
 |---|---|---|---|
-| 0,3 | 805 | 93 % | 43 % |
-| 0,4 | 687 | 86 % | 47 % |
-| **0,5** | 571 | 78 % | 51 % |
-| 0,6 | 476 | 70 % | 55 % |
-| 0,7 | 362 | 60 % | 62 % |
+| 0.3 | 805 | 93% | 43% |
+| 0.4 | 687 | 86% | 47% |
+| **0.5** | 571 | 78% | 51% |
+| 0.6 | 476 | 70% | 55% |
+| 0.7 | 362 | 60% | 62% |
 
-### Facteurs de risque (odds ratios de la régression logistique)
+### Risk factors (logistic regression odds ratios)
 
 | Variable | Odds ratio |
 |---|---|
-| Internet fibre optique | 3,06 |
-| Paiement par chèque électronique | 1,49 |
-| Streaming films / TV | 1,48 / 1,45 |
-| Facturation sans papier | 1,40 |
-| Ancienneté (tenure) | 0,47 |
-| Contrat 1 an / 2 ans | 0,49 / 0,25 |
+| Fiber optic internet | 3.06 |
+| Electronic check payment | 1.49 |
+| Streaming movies / TV | 1.48 / 1.45 |
+| Paperless billing | 1.40 |
+| Tenure | 0.47 |
+| 1-year / 2-year contract | 0.49 / 0.25 |
 
-Un odds ratio supérieur à 1 augmente la « cote » de départ, un odds ratio inférieur à 1 la réduit.
+An odds ratio above 1 increases the odds of churn; an odds ratio below 1 reduces them.
 
-## Méthode
+## Method
 
-1. **Préparation** : suppression de `customerID` ; conversion de `TotalCharges` en numérique ; fusion de « No internet service » et « No phone service » avec « No » ; suppression de `TotalCharges`, redondante avec `tenure × MonthlyCharges`.
-2. **Exploration** : répartition du churn, taux de churn par variable, distributions, corrélations (figures 01 à 07).
-3. **Modélisation** : pipeline scikit-learn (standardisation des variables numériques, one-hot encoding des catégorielles), séparation train/test stratifiée, `class_weight="balanced"` pour compenser le déséquilibre.
-4. **Évaluation** : AUC, rappel, précision, F1, matrice de confusion, courbe précision/rappel selon le seuil (figures 08 à 11).
+1. **Preparation**: drop `customerID`; convert `TotalCharges` to numeric; merge "No internet service" and "No phone service" into "No"; drop `TotalCharges`, which is redundant with `tenure × MonthlyCharges`.
+2. **Exploration**: churn distribution, churn rate per variable, distributions, correlations (figures 01 to 07).
+3. **Modeling**: scikit-learn pipeline (scaling of numeric variables, one-hot encoding of categorical ones), stratified train/test split, `class_weight="balanced"` to compensate for the imbalance.
+4. **Evaluation**: AUC, recall, precision, F1, confusion matrix, precision/recall curve by threshold (figures 08 to 11).
 
-## Structure du projet
+## Project structure
 
 ```
 .
-├── download_kaggle_data.py   # télécharge le dataset dans data/raw/
-├── exploration.py            # analyse exploratoire -> figures 01 à 07
-├── modelisation.py           # comparaison des modèles -> figures 08 à 11
-├── figures/                  # graphiques générés
-└── data/raw/                 # données (non versionnées)
+├── download_kaggle_data.py   # downloads the dataset into data/raw/
+├── exploration.py            # exploratory analysis -> figures 01 to 07
+├── modelisation.py           # model comparison -> figures 08 to 11
+├── figures/                  # generated charts
+└── data/raw/                 # data (not versioned)
 ```
 
-## Installation et utilisation
+## Installation and usage
 
-Prérequis : Python 3.10+.
+Requirements: Python 3.10+.
 
 ```bash
 pip install pandas numpy matplotlib seaborn scikit-learn kaggle
 ```
 
-1. **Données** : crée un token sur [kaggle.com/settings](https://www.kaggle.com/settings), place `kaggle.json` dans `~/.kaggle/`, puis lance :
+1. **Data**: create a token at [kaggle.com/settings](https://www.kaggle.com/settings), put `kaggle.json` in `~/.kaggle/`, then run:
    ```bash
    python download_kaggle_data.py
    ```
-2. **Exploration** :
+2. **Exploration**:
    ```bash
    python exploration.py
    ```
-3. **Modélisation** :
+3. **Modeling**:
    ```bash
    python modelisation.py
    ```
 
-Les scripts se lancent depuis la racine du projet. Les figures sont enregistrées dans `figures/`.
+Run the scripts from the project root. Figures are saved in `figures/`.
 
-## Pistes d'amélioration
+## Possible improvements
 
-- Optimiser les hyperparamètres (grid search) et calibrer les probabilités.
-- Chiffrer le seuil optimal avec le coût d'une offre de rétention et la valeur d'un client.
-- Tester d'autres modèles (XGBoost, LightGBM) et des interactions entre variables.
+- Tune hyperparameters (grid search) and calibrate the probabilities.
+- Compute the optimal threshold from the cost of a retention offer and the value of a customer.
+- Try other models (XGBoost, LightGBM) and feature interactions.

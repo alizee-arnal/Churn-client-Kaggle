@@ -28,16 +28,16 @@ COLOR_CHURN = "#c0504d"
 
 pd.set_option("display.width", None)
 
-#importation et préparation (mêmes étapes que l'exploration)
+#import and preparation (same steps as the exploration)
 
 df = pd.read_csv(DATA_PATH)
 df.drop(columns=["customerID"], inplace=True)
 df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
 
-#"No internet service" et "No phone service" répètent juste InternetService / PhoneService : on les ramène à "No"
+#"No internet service" and "No phone service" just repeat InternetService / PhoneService: map them to "No"
 df.replace({"No internet service": "No", "No phone service": "No"}, inplace=True)
 
-#TotalCharges ≈ tenure x MonthlyCharges : variable redondante qui brouille les coefficients de la régression logistique
+#TotalCharges ≈ tenure x MonthlyCharges: redundant variable that blurs the logistic regression coefficients
 df.drop(columns=["TotalCharges"], inplace=True)
 
 y = (df.pop("Churn") == "Yes").astype(int)
@@ -46,14 +46,14 @@ X = df
 numeric_cols = ["tenure", "MonthlyCharges"]
 categorical_cols = [col for col in X.columns if col not in numeric_cols]
 
-#1. séparation train / test (stratify = on garde 27% de churn dans les deux)
+#1. train / test split (stratify = keep ~27% churn in both)
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=RANDOM_STATE,
 )
 print(f"Train : {len(X_train)} clients | Test : {len(X_test)} clients | churn train {y_train.mean():.1%} / test {y_test.mean():.1%}")
 
-#2. préparation des variables dans un pipeline (appris uniquement sur le train)
+#2. feature preprocessing in a pipeline (fitted on the train set only)
 
 preprocessor = ColumnTransformer([
     ("num", StandardScaler(), numeric_cols),
@@ -72,7 +72,7 @@ models = {
 }
 pipelines = {name: Pipeline([("prep", preprocessor), ("model", model)]) for name, model in models.items()}
 
-#3. comparaison des modèles en validation croisée (sur le train uniquement)
+#3. model comparison with cross-validation (on the train set only)
 
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
 scoring = ["roc_auc", "recall", "precision", "f1", "accuracy"]
@@ -87,7 +87,7 @@ cv_table = pd.DataFrame(cv_results).T.round(3).sort_values("roc_auc", ascending=
 print("\nValidation croisée (moyenne sur 5 folds) :")
 print(cv_table)
 
-#4. entraînement final et évaluation sur le test
+#4. final training and evaluation on the test set
 
 for pipe in pipelines.values():
     pipe.fit(X_train, y_train)
@@ -104,7 +104,7 @@ ax.set_ylabel("Taux de vrais positifs (partants détectés)")
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "08_courbes_roc.png", dpi=150)
 
-#modèle retenu : la régression logistique (performance proche du boosting, mais interprétable)
+#chosen model: logistic regression (performance close to boosting, but interpretable)
 
 CHOSEN = "Régression logistique"
 chosen_pipe = pipelines[CHOSEN]
@@ -128,7 +128,7 @@ ax.set_ylabel("Réalité")
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "09_matrice_confusion.png", dpi=150)
 
-#5. choix du seuil : compromis précision / rappel
+#5. threshold choice: precision / recall trade-off
 
 precision, recall, thresholds = precision_recall_curve(y_test, proba_test)
 
@@ -152,7 +152,7 @@ for threshold in [0.3, 0.4, 0.5, 0.6, 0.7]:
         f"{tp} vrais partants sur {y_test.sum()} (rappel {tp / y_test.sum():.0%}, précision {tp / max(pred.sum(), 1):.0%})"
     )
 
-#6. interprétation : coefficients de la régression logistique
+#6. interpretation: logistic regression coefficients
 
 feature_names = chosen_pipe.named_steps["prep"].get_feature_names_out()
 feature_names = [name.split("__", 1)[1] for name in feature_names]

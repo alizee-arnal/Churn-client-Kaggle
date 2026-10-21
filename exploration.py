@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sns
 plt.style.use('ggplot')
 
-#importation données
+#data import
 
 
 DATA_PATH = Path("data") / "raw" / "WA_Fn-UseC_-Telco-Customer-Churn.csv"
@@ -24,7 +24,7 @@ df = pd.read_csv(DATA_PATH)
 ##print(df.head(10))
 
 
-#préparation data
+#data preparation
 
 df.drop(columns=["customerID"], inplace=True)
 
@@ -34,13 +34,13 @@ FIGURES_DIR.mkdir(exist_ok=True)
 is_churn = (df["Churn"] == "Yes").astype(int)
 global_churn_rate = is_churn.mean() * 100
 
-#version lisible des données pour les graphiques (df reste intact pour l'encodage)
+#readable version of the data for the charts (df stays untouched for encoding)
 df_plot = df.assign(
     Statut=df["Churn"].map(CHURN_LABELS),
     SeniorCitizen=df["SeniorCitizen"].map({0: "No", 1: "Yes"}),
 )
 
-#1. répartition du churn
+#1. churn distribution
 
 churn_counts = df["Churn"].value_counts()
 
@@ -53,7 +53,7 @@ ax.set_ylabel("Nombre de clients")
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "01_repartition_churn.png", dpi=150)
 
-#2. taux de churn par variable catégorielle
+#2. churn rate by categorical variable
 
 categorical_cols = [
     "Contract",
@@ -81,7 +81,7 @@ fig.suptitle(f"Taux de churn par catégorie (pointillés = moyenne {global_churn
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "02_taux_churn_par_categorie.png", dpi=150)
 
-#3. distribution des variables numériques selon le churn
+#3. distribution of numeric variables by churn
 
 numeric_cols = {
     "tenure": "Ancienneté (mois)",
@@ -102,7 +102,7 @@ fig.suptitle("Distribution selon le churn")
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "03_distributions_numeriques.png", dpi=150)
 
-#4. taux de churn selon l'ancienneté
+#4. churn rate by tenure
 
 tenure_bins = pd.cut(
     df["tenure"],
@@ -122,7 +122,7 @@ ax.set_ylim(0, 60)
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "04_churn_par_anciennete.png", dpi=150)
 
-#5. contrat x montant mensuel
+#5. contract x monthly charges
 
 fig, ax = plt.subplots(figsize=(9, 5))
 sns.boxplot(
@@ -136,11 +136,11 @@ sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1), title="Churn")
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "05_contrat_montant.png", dpi=150)
 
-#encodage des variables texte en 0/1
+#encoding text variables as 0/1
 
 df_encoded = pd.get_dummies(df, drop_first=True, dtype=int)
 
-#6. corrélations
+#6. correlations
 
 df_corr = df_encoded.corr()
 
@@ -150,7 +150,7 @@ ax.set_title("Corrélations entre toutes les variables")
 fig.tight_layout()
 fig.savefig(FIGURES_DIR / "06_heatmap_correlations.png", dpi=150)
 
-#7. corrélation de chaque variable avec le churn
+#7. correlation of each variable with churn
 
 churn_corr = df_corr["Churn_Yes"].drop("Churn_Yes").sort_values()
 print("\nCorrélation avec le churn :")
